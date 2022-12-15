@@ -120,12 +120,18 @@ export class Faker {
         if (matched) {
             const { response, status, delay = 0 } = matched;
             return new Promise((resolve) => {
-                setTimeout(() => {
+                setTimeout(async () => {
+                    let payload = response;
+
                     if (typeof response === 'function') {
-                        resolve(new Response(url, status, response(request)));
-                    } else {
-                        resolve(new Response(url, status, response));
+                        payload = response(request);
+
+                        if (response.constructor.name === 'AsyncFunction' || payload instanceof Promise) {
+                            payload = await payload;
+                        }
                     }
+
+                    resolve(new Response(url, status, payload));
                 }, +delay);
             });
         }
